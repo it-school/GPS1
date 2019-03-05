@@ -1,11 +1,7 @@
 package com.example.vencedor.gps1;
 
-import java.util.Date;
-
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -15,6 +11,9 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.Date;
 
 public class MainActivity extends Activity {
 
@@ -43,21 +42,6 @@ public class MainActivity extends Activity {
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
     }
 
-    @SuppressLint("MissingPermission")
-    @Override
-    protected void onResume() {
-        super.onResume();
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000 * 10, 10, locationListener);
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000 * 10, 10, locationListener);
-        checkEnabled();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        locationManager.removeUpdates(locationListener);
-    }
-
     private LocationListener locationListener = new LocationListener() {
 
         @Override
@@ -70,10 +54,16 @@ public class MainActivity extends Activity {
             checkEnabled();
         }
 
-        @SuppressLint("MissingPermission")
+        //@SuppressLint("MissingPermission")
         @Override
         public void onProviderEnabled(String provider) {
             checkEnabled();
+            if (ActivityCompat.checkSelfPermission(getBaseContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    && ActivityCompat.checkSelfPermission(getBaseContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                Toast.makeText(getBaseContext(), "GPS access restricted", Toast.LENGTH_SHORT).show();
+                return;
+            }
             showLocation(locationManager.getLastKnownLocation(provider));
         }
 
@@ -87,14 +77,41 @@ public class MainActivity extends Activity {
         }
     };
 
-    private void showLocation(Location location) {
-        if (location == null)
+    @Override
+    protected void onPause() {
+        super.onPause();
+        locationManager.removeUpdates(locationListener);
+    }
+
+    //@SuppressLint("MissingPermission")
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            Toast.makeText(getBaseContext(), "GPS access restricted", Toast.LENGTH_SHORT).show();
             return;
+        }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000 * 10, 10, locationListener);
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000 * 10, 10, locationListener);
+        checkEnabled();
+    }
+
+    private void showLocation(Location location) {
+        if (location == null) {
+            Toast.makeText(getBaseContext(), "Can't get current location", Toast.LENGTH_SHORT).show();
+            return;
+        }
         if (location.getProvider().equals(LocationManager.GPS_PROVIDER)) {
-            tvLocationGPS.setText(formatLocation(location));
+            {
+                tvLocationGPS.setText(formatLocation(location));
+                Toast.makeText(getBaseContext(), "GPS coordinates", Toast.LENGTH_SHORT).show();
+            }
         } else if (location.getProvider().equals(
                 LocationManager.NETWORK_PROVIDER)) {
             tvLocationNet.setText(formatLocation(location));
+            Toast.makeText(getBaseContext(), "Network provider coordinates", Toast.LENGTH_SHORT).show();
         }
     }
 
