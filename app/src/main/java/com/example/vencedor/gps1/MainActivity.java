@@ -28,20 +28,6 @@ public class MainActivity extends Activity {
     StringBuilder sbGPS = new StringBuilder();
     StringBuilder sbNet = new StringBuilder();
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        tvEnabledGPS = (TextView) findViewById(R.id.tvEnabledGPS);
-        tvStatusGPS = (TextView) findViewById(R.id.tvStatusGPS);
-        tvLocationGPS = (TextView) findViewById(R.id.tvLocationGPS);
-        tvEnabledNet = (TextView) findViewById(R.id.tvEnabledNet);
-        tvStatusNet = (TextView) findViewById(R.id.tvStatusNet);
-        tvLocationNet = (TextView) findViewById(R.id.tvLocationNet);
-
-        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-    }
-
     private LocationListener locationListener = new LocationListener() {
 
         @Override
@@ -59,7 +45,7 @@ public class MainActivity extends Activity {
         public void onProviderEnabled(String provider) {
             checkEnabled();
             if (ActivityCompat.checkSelfPermission(getBaseContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                    && ActivityCompat.checkSelfPermission(getBaseContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    || ActivityCompat.checkSelfPermission(getBaseContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
                 Toast.makeText(getBaseContext(), "GPS access restricted", Toast.LENGTH_SHORT).show();
                 return;
@@ -70,12 +56,26 @@ public class MainActivity extends Activity {
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
             if (provider.equals(LocationManager.GPS_PROVIDER)) {
-                tvStatusGPS.setText("Status: " + String.valueOf(status));
+                tvStatusGPS.setText("Status (GPS): " + status);
             } else if (provider.equals(LocationManager.NETWORK_PROVIDER)) {
-                tvStatusNet.setText("Status: " + String.valueOf(status));
+                tvStatusNet.setText("Status (Cell): " + status);
             }
         }
     };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        tvEnabledGPS = findViewById(R.id.tvEnabledGPS);
+        tvStatusGPS = findViewById(R.id.tvStatusGPS);
+        tvLocationGPS = findViewById(R.id.tvLocationGPS);
+        tvEnabledNet = findViewById(R.id.tvEnabledNet);
+        tvStatusNet = findViewById(R.id.tvStatusNet);
+        tvLocationNet = findViewById(R.id.tvLocationNet);
+
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+    }
 
     @Override
     protected void onPause() {
@@ -119,8 +119,8 @@ public class MainActivity extends Activity {
         if (location == null)
             return "";
         return String.format(
-                "Coordinates: lat = %1$.4f, lon = %2$.4f, time = %3$tF %3$tT",
-                location.getLatitude(), location.getLongitude(), new Date(location.getTime()));
+                "Coordinates: lat = %1$.4f, lon = %2$.4f, time = %3$tF %3$tT, speed: %1$.1f",
+                location.getLatitude(), location.getLongitude(), new Date(location.getTime()), location.getSpeed());
     }
 
     private void checkEnabled() {
@@ -132,6 +132,10 @@ public class MainActivity extends Activity {
 
     public void onClickLocationSettings(View view) {
         startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-    };
+    }
+
+    public void buttonShowClick(View view) {
+
+    }
 
 }
